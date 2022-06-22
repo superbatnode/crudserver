@@ -1,8 +1,8 @@
-const { User } = require("../database");
+const { User, Address } = require("../database");
 const bcrypt = require("bcrypt");
 const { exist } = require("joi");
 const CustomError = require("../error/CustomError");
-const {access_token} = require("../auth/token");
+const { access_token } = require("../auth/token");
 const saltRounds = 10;
 class UserController {
     static async register(req, res, next) {
@@ -40,7 +40,7 @@ class UserController {
     }
 
     static async login(req, res, next) {
-          console.log(req.body);
+        console.log(req.body);
         const exist = await User.findOne({ username: req.body.username });
         if (!exist)
             return next(CustomError.unauthorized("User doesn't exist"));
@@ -59,21 +59,68 @@ class UserController {
                 access_token: token
             });
         } catch (e) {
-            return next("couldn't create token: ",e);
+            return next("couldn't create token: ", e);
         }
     }
 
     static async getUser(req, res, next) {
-        try{
-            const user = await User.findOne({_id:req.id},"firstName lastName email username");
+        try {
+            const user = await User.findOne({ _id: req.id }, "firstName lastName email username");
             res.json(user);
         }
-        catch(e){
+        catch (e) {
             next(e);
+        }
+    }
+    static async deleteUser(req, res, next) {
+        try {
+            const del = await User.deleteOne({ _id: req.id })
+            res.send(del);
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    static async listOfTen(req, res, next) {
+        const page = Number(req.params.page);
+        if (!page)
+            return next(CustomError.Error404("Not a valid page"));
+        const limit = 10;
+        const user = await User.find().limit(limit).skip((page - 1) * limit).exec();
+        const count = await User.countDocuments();
+        try {
+            res.json({
+                user,
+                totalPages: Math.ceil(count / limit),
+                currentPage: page
+            })
+        }
+        catch (err) {
+            return next(err);
         }
 
     }
 
+    static async address(req, res, next) {
+        const pincode = Number(req.body.pincode);
+        const phoneno = Number(req.body.phoneno);
+        const _id = req.id;
+        let add = { ...req.body };
+        add.phoneno = phoneno;
+        add.pincode = pincode;
+        add.user = _id;
+        try {
+            //adding the adress ref to the user fiedl
+            const addr = await Address(add).save();
+            const user = await User.findOne({ _id })
+            user.address.push(addr._id);
+            user.save();
+            ///const getuser = await User.findOne({ _id }).populate("address");
+            res.json(addr);
+        } catch (e) {
+            return next(e);
+        }
+    }
 
 }
 module.exports = UserController; 
