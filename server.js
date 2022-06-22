@@ -11,7 +11,7 @@ dbcon()
     .then(() => console.log("db connected"))
     .catch(e => console.log("unable to connect db:  " + e));
 app.get("/", (req, res) => res.json({ connection: "done" }));
-app.use("/api", api_route);
+app.use("/user", api_route);
 app.use("*", (req, res, next) => next("page not found"));
 app.use(errorHandler);
 app.listen(PORT, () => console.log("server's up"));

@@ -10,6 +10,9 @@ class CustomError extends Error{
     static invalidInput(msg="Invalid Input"){
         return new CustomError(400, msg);
     }
+    static unauthorized(msg="unauthorized user"){
+        return new CustomError(401, msg);
+    }
 
 }
 module.exports = CustomError;
