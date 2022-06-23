@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const { Schema } = require("mongoose");
-const Address = require("./Address");
 const userSchema = new mongoose.Schema({
     username: { type: String, unique: true },
     firstName: { type: String, required: true },

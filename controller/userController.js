@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const { exist } = require("joi");
 const CustomError = require("../error/CustomError");
 const { access_token } = require("../auth/token");
+const Joi = require("joi");
+const Token = require("../database/model/Token");
 const saltRounds = 10;
 class UserController {
     static async register(req, res, next) {
@@ -116,11 +118,69 @@ class UserController {
             user.address.push(addr._id);
             user.save();
             ///const getuser = await User.findOne({ _id }).populate("address");
-            res.json(addr);
+            res.json({ address: addr, id: addr._id });
         } catch (e) {
             return next(e);
         }
     }
 
+    static async getUserWithAllDetails(req, res, next) {
+        const allDetail = await User.findOne({ _id: req.id }, "-password -__v ").populate({ path: "address", select: "address city state pincode phoneno -_id" }).
+            exec();
+        ;
+        if (!allDetail)
+            return next(CustomError.Error404("User not found: Internal Server Error"));
+        res.json(allDetail);
+    }
+    static async deleteAddress(req, res, next) {
+        //const address = await Address.findOne(req.body);
+        // if(address===null)
+        // return next(CustomError.Error404("address not found in the database"));
+        if (!req.body.id)
+            return next("id not found");
+        const del = await Address.findOneAndDelete({ _id: req.body.id });
+        if (del)
+            res.json(del)
+        else return next("cannot delete");
+    }
+
+    static async forgetPassword(req, res, next) {
+        let user = null;
+        try {
+            user = await User.findOne({ email: req.body.email }, "-password -__v");
+        } catch (e) {
+            return next(e); 
+        }
+        if (!user)
+            return next(CustomError.unauthorized("this user doesn't exist"));
+        //generate access token
+        const token = await access_token({
+            _id: user._id,
+            email: user.email
+        }, 600);
+        try {
+            const saveToken = await Token({ token, email: user.email }).save();
+        } catch (e) {
+            console.log(e,'=======')
+            return next(e);
+        }
+        // res.header({token:token});
+        res.json({ reset_token: token });
+    }
+
+    static async forgetPasswordReset(req, res, next) {
+        if (!req.resetPassword)
+            return next(CustomError.unauthorized());
+        console.log(req.resetPassword)
+        const hashedPassword = await bcrypt.hash(req.body.reset_password, saltRounds);
+        const updatePassword = await User.findOneAndUpdate({ email: req.resetPassword.validate.email }, { password: hashedPassword });
+        const deleteAllTokens = await Token.deleteMany({ email: req.resetPassword.validate.email})
+        console.log(updatePassword);
+        res.json({ update: "done" });
+    }
+
+    static async photoUpload(req, res, next){
+        
+    }
 }
 module.exports = UserController; 

@@ -3,17 +3,14 @@ const CustomError = require("../error/CustomError");
 const addressVerify = async (req, res, next) => {
     const schema = Joi.object({
         address: Joi.string()
-            .alphanum()
             .min(3)
             .max(30)
             .required(),
         city: Joi.string()
-            .alphanum()
             .min(3)
             .max(30)
             .required(),
         state: Joi.string()
-            .alphanum()
             .min(3)
             .max(30)
             .required(),

@@ -1,3 +1,4 @@
+const multer = require("multer");
 const CustomError = require("./CustomError");
 
 const errorHandler = (err,req,res,next)=>{
@@ -9,6 +10,9 @@ const errorHandler = (err,req,res,next)=>{
     if(err instanceof CustomError){
         error.message = err.message; 
         statuscode = err.status; 
+    }
+    if(err instanceof multer){
+        console.log(err);
     }
     res.status(statuscode).json(error);
 } 

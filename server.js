@@ -5,6 +5,12 @@ const cors = require("cors");
 const dbcon = require("./database/connection");
 const errorHandler = require("./error/errorHandler");
 const { PORT } = require("./config");
+const bodyParser = require("body-parser");
+app.use(
+    bodyParser.urlencoded({
+      extended: true,
+    })
+  );
 app.use(cors());
 app.use(express.json());
 dbcon()

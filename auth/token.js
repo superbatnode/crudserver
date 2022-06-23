@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { TOKEN_KEY } = require("../config");
-const access_token = async(payload) => {
-    const key = await jwt.sign(payload, TOKEN_KEY,{expiresIn:60*60});
+const access_token = async(payload, expiry=60*60) => {
+    const key = await jwt.sign(payload, TOKEN_KEY,{expiresIn:expiry});
     return key;
 }
 const refresh_token = async(payload) => {
